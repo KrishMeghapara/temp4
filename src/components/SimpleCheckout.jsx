@@ -43,11 +43,11 @@ export default function SimpleCheckout({ onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     const required = ['fullName', 'phone', 'address', 'city', 'state', 'pincode'];
     const missing = required.filter(field => !shippingDetails[field]);
-    
+
     if (missing.length > 0) {
       setError(`Please fill in: ${missing.join(', ')}`);
       return;
@@ -80,10 +80,10 @@ export default function SimpleCheckout({ onClose, onSuccess }) {
       const order = await apiService.createOrder(orderData);
       setOrderId(order.orderID || order.OrderID);
       setSuccess(true);
-      
+
       // Clear cart after successful order
       clearCart();
-      
+
       if (onSuccess) {
         onSuccess(order);
       }
@@ -122,7 +122,33 @@ export default function SimpleCheckout({ onClose, onSuccess }) {
   }
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
+    <Box
+      sx={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: { xs: '95%', sm: 520, md: 580 },
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        p: { xs: 3, sm: 4, md: 5 },
+        borderRadius: 4,
+        maxHeight: '90vh',
+        overflow: 'auto',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: 'linear-gradient(90deg, #667eea, #764ba2)',
+          borderRadius: '16px 16px 0 0'
+        }
+      }}
+    >
       <Paper sx={{ 
         p: 4, 
         borderRadius: 3,
@@ -196,7 +222,7 @@ export default function SimpleCheckout({ onClose, onSuccess }) {
               </ListItem>
             ))}
           </List>
-          
+
           <Divider sx={{ my: 2 }} />
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography>Subtotal:</Typography>
@@ -390,4 +416,4 @@ export default function SimpleCheckout({ onClose, onSuccess }) {
       </Paper>
     </Box>
   );
-} 
+}

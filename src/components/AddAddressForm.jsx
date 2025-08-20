@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  TextField, 
-  Button, 
-  Typography, 
-  Alert, 
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Alert,
   Paper,
   Grid,
   InputAdornment,
@@ -16,9 +16,10 @@ import {
   Card,
   CardContent,
   Divider,
-  Modal
+  Modal,
+  Container // Import Container
 } from '@mui/material';
-import { 
+import {
   Home as HomeIcon,
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
@@ -51,13 +52,14 @@ const AddAddressForm = ({ onSuccess }) => {
   const [lng, setLng] = useState(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [showMap, setShowMap] = useState(false); // Added to control map visibility
 
   // Validation states
   const [fieldErrors, setFieldErrors] = useState({});
 
   const validateField = (name, value) => {
     const errors = { ...fieldErrors };
-    
+
     switch (name) {
       case 'house':
         if (!value.trim()) errors.house = 'House/Flat number is required';
@@ -91,7 +93,7 @@ const AddAddressForm = ({ onSuccess }) => {
       default:
         break;
     }
-    
+
     setFieldErrors(errors);
   };
 
@@ -117,14 +119,14 @@ const AddAddressForm = ({ onSuccess }) => {
           setLat(latitude);
           setLng(longitude);
           setMapCenter({ lat: latitude, lng: longitude });
-          
+
           // Reverse geocode to get address
           try {
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
             );
             const data = await response.json();
-            
+
             if (data && data.address) {
               setFullAddress(data.display_name);
               setCity(data.address.city || data.address.town || data.address.village || '');
@@ -137,7 +139,7 @@ const AddAddressForm = ({ onSuccess }) => {
           } catch (error) {
             console.error('Reverse geocoding error:', error);
           }
-          
+
           setLocationLoading(false);
           setShowMap(true);
         },
@@ -198,12 +200,15 @@ const AddAddressForm = ({ onSuccess }) => {
     if (activeStep === 0) {
       // Validate required fields
       const requiredFields = ['house', 'street', 'city', 'state', 'pincode'];
-      const hasErrors = requiredFields.some(field => {
-        const value = eval(field);
+      let hasErrors = false;
+      requiredFields.forEach(field => {
+        const value = eval(field); // Using eval for simplicity, consider safer alternatives in production
         validateField(field, value);
-        return !value.trim();
+        if (!value.trim()) {
+          hasErrors = true;
+        }
       });
-      
+
       if (hasErrors || Object.keys(fieldErrors).length > 0) {
         setError('Please fill in all required fields correctly');
         return;
@@ -229,7 +234,7 @@ const AddAddressForm = ({ onSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch('http://localhost:5236/api/Address/AddForCurrentUser', {
         method: 'POST',
@@ -239,7 +244,7 @@ const AddAddressForm = ({ onSuccess }) => {
         },
         body: JSON.stringify({ house, street, landmark, city, state, pincode, phone, lat, lng })
       });
-      
+
       if (response.ok) {
         onSuccess && onSuccess();
       } else {
@@ -261,7 +266,7 @@ const AddAddressForm = ({ onSuccess }) => {
             <Typography variant="h6" sx={{ mb: 3, color: '#1f2937', fontWeight: 600 }}>
               Enter Your Address Details
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <TextField
@@ -281,7 +286,7 @@ const AddAddressForm = ({ onSuccess }) => {
                   }}
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -300,7 +305,7 @@ const AddAddressForm = ({ onSuccess }) => {
                   }}
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -310,7 +315,7 @@ const AddAddressForm = ({ onSuccess }) => {
                   className="address-input"
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -322,7 +327,7 @@ const AddAddressForm = ({ onSuccess }) => {
                   className="address-input"
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -334,7 +339,7 @@ const AddAddressForm = ({ onSuccess }) => {
                   className="address-input"
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -347,7 +352,7 @@ const AddAddressForm = ({ onSuccess }) => {
                   inputProps={{ maxLength: 6 }}
                 />
               </Grid>
-              
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -368,14 +373,19 @@ const AddAddressForm = ({ onSuccess }) => {
                 />
               </Grid>
             </Grid>
-            
-            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+
+            <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               <Button
                 variant="outlined"
-                startIcon={locationLoading ? <CircularProgress size={20} /> : <MyLocationIcon />}
+                startIcon={locationLoading ? <CircularProgress size={20} sx={{ color: '#667eea' }} /> : <MyLocationIcon sx={{ color: '#667eea' }} />}
                 onClick={getCurrentLocation}
                 disabled={locationLoading}
                 className="location-btn"
+                sx={{ 
+                  borderColor: '#667eea', 
+                  color: '#667eea',
+                  '&:hover': { borderColor: '#764ba2', color: '#764ba2' }
+                }}
               >
                 {locationLoading ? 'Getting Location...' : 'Use Current Location'}
               </Button>
@@ -383,51 +393,57 @@ const AddAddressForm = ({ onSuccess }) => {
                 variant="outlined"
                 onClick={handleOpenMap}
                 disabled={!city || !state}
-                sx={{ mb: 2 }}
+                sx={{ 
+                  borderColor: '#667eea', 
+                  color: '#667eea',
+                  '&:hover': { borderColor: '#764ba2', color: '#764ba2' }
+                }}
               >
                 Open Map
               </Button>
             </Box>
           </Box>
         );
-        
+
       case 1:
         return (
           <Box>
             <Typography variant="h6" sx={{ mb: 3, color: '#1f2937', fontWeight: 600 }}>
               Select Your Location on Map
             </Typography>
-            
+
             {fullAddress && (
-              <Alert severity="info" sx={{ mb: 3 }}>
+              <Alert severity="info" sx={{ mb: 3, bgcolor: '#e0e7ff', color: '#4f46e5' }}>
                 <Typography variant="body2">
                   <strong>Current Address:</strong> {fullAddress}
                 </Typography>
               </Alert>
             )}
-            
-            <Box className="map-container">
-              <AddressMap 
-                onAddressSelect={handleMapSelect} 
-                center={mapCenter} 
-                size={{ width: '100%', height: 400 }} 
-              />
+
+            <Box className="map-container" sx={{ mt: 3, height: 400, position: 'relative', borderRadius: 2, overflow: 'hidden' }}>
+              {showMap && ( // Conditionally render AddressMap
+                <AddressMap
+                  onAddressSelect={handleMapSelect}
+                  center={mapCenter}
+                  size={{ width: '100%', height: '100%' }}
+                />
+              )}
             </Box>
-            
+
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
               Click on the map to select your exact location
             </Typography>
           </Box>
         );
-        
+
       case 2:
         return (
           <Box>
             <Typography variant="h6" sx={{ mb: 3, color: '#1f2937', fontWeight: 600 }}>
               Confirm Your Address
             </Typography>
-            
-            <Card variant="outlined" sx={{ mb: 3 }}>
+
+            <Card variant="outlined" sx={{ mb: 3, border: '1px solid', borderColor: 'grey.300', borderRadius: 2 }}>
               <CardContent>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
@@ -465,9 +481,9 @@ const AddAddressForm = ({ onSuccess }) => {
                 </Grid>
               </CardContent>
             </Card>
-            
+
             {fullAddress && (
-              <Alert severity="success" sx={{ mb: 3 }}>
+              <Alert severity="success" sx={{ mb: 3, bgcolor: '#d1fae5', color: '#047857' }}>
                 <Typography variant="body2">
                   <strong>Map Location:</strong> {fullAddress}
                 </Typography>
@@ -475,7 +491,7 @@ const AddAddressForm = ({ onSuccess }) => {
             )}
           </Box>
         );
-        
+
       default:
         return null;
     }
@@ -483,70 +499,120 @@ const AddAddressForm = ({ onSuccess }) => {
 
   return (
     <Box className="address-form-container">
-      <Paper className="address-form-paper" elevation={0}>
-        <Box className="address-form-header">
-          <Typography variant="h4" className="form-title">
-            Add Delivery Address
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Please provide your complete address for accurate delivery
-          </Typography>
-        </Box>
-
-        <Modal open={mapOpen} onClose={() => setMapOpen(false)}>
-          <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', boxShadow: 24, p: 2, borderRadius: 2 }}>
-            <AddressMap
-              center={mapCenter}
-              onAddressSelect={({ lat, lng }) => handleMapSelect({ lat, lng })}
-              size={{ width: 400, height: 400 }}
-            />
-            <Button onClick={() => setMapOpen(false)} sx={{ mt: 2 }}>Close</Button>
+      <Container maxWidth="md" sx={{ py: 4, minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, sm: 4, md: 5 },
+            borderRadius: 4,
+            width: '100%',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '4px',
+              background: 'linear-gradient(90deg, #667eea, #764ba2)',
+              borderRadius: '16px 16px 0 0'
+            }
+          }}
+        >
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 800,
+                mb: 1,
+                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '-1px'
+              }}
+            >
+              Add New Address
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+              Please provide your delivery address details
+            </Typography>
           </Box>
-        </Modal>
 
-        <Divider sx={{ mb: 4 }} />
+          <Modal open={mapOpen} onClose={() => setMapOpen(false)} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ position: 'relative', bgcolor: 'background.paper', boxShadow: 24, p: 3, borderRadius: 3, width: { xs: '90%', sm: 450 }, maxHeight: '90vh', overflowY: 'auto' }}>
+              <Typography variant="h6" sx={{ mb: 2, textAlign: 'center', fontWeight: 600 }}>Select Location on Map</Typography>
+              <AddressMap
+                center={mapCenter}
+                onAddressSelect={({ lat, lng }) => handleMapSelect({ lat, lng })}
+                size={{ width: '100%', height: 400 }}
+              />
+              <Button onClick={() => setMapOpen(false)} variant="contained" sx={{ mt: 2, width: '100%', background: 'linear-gradient(90deg, #667eea, #764ba2)' }}>Confirm Selection</Button>
+            </Box>
+          </Modal>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-        )}
+          <Divider sx={{ mb: 4 }} />
 
-        <Box className="step-content">
-          {renderStepContent(activeStep)}
-        </Box>
-
-        <Box className="form-actions">
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            variant="outlined"
-            sx={{ mr: 1 }}
-          >
-            Back
-          </Button>
-          
-          {activeStep === steps.length - 1 ? (
-            <Button
-              variant="contained"
-              onClick={handleSubmit}
-              disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
-              className="submit-btn"
-            >
-              {loading ? 'Saving Address...' : 'Save Address'}
-            </Button>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              disabled={locationLoading}
-              startIcon={locationLoading ? <CircularProgress size={20} /> : <MapIcon />}
-              className="next-btn"
-            >
-              {locationLoading ? 'Loading...' : 'Next'}
-            </Button>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2, bgcolor: '#fdecec', color: '#dc2626' }}>{error}</Alert>
           )}
-        </Box>
-      </Paper>
+
+          <Box className="step-content">
+            {renderStepContent(activeStep)}
+          </Box>
+
+          <Box className="form-actions" sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              variant="outlined"
+              sx={{ 
+                borderColor: '#667eea', 
+                color: '#667eea',
+                '&:hover': { borderColor: '#764ba2', color: '#764ba2' }
+              }}
+            >
+              Back
+            </Button>
+
+            {activeStep === steps.length - 1 ? (
+              <Button
+                variant="contained"
+                onClick={handleSubmit}
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <SaveIcon sx={{ color: 'white' }} />}
+                className="submit-btn"
+                sx={{ 
+                  background: 'linear-gradient(90deg, #667eea, #764ba2)',
+                  color: 'white',
+                  '&:hover': { background: 'linear-gradient(90deg, #764ba2, #667eea)' }
+                }}
+              >
+                {loading ? 'Saving Address...' : 'Save Address'}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                disabled={locationLoading}
+                startIcon={locationLoading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <MapIcon sx={{ color: 'white' }} />}
+                className="next-btn"
+                sx={{ 
+                  background: 'linear-gradient(90deg, #667eea, #764ba2)',
+                  color: 'white',
+                  '&:hover': { background: 'linear-gradient(90deg, #764ba2, #667eea)' }
+                }}
+              >
+                {locationLoading ? 'Loading...' : 'Next'}
+              </Button>
+            )}
+          </Box>
+        </Paper>
+      </Container>
     </Box>
   );
 };
