@@ -13,6 +13,8 @@ import RegisterForm from "./components/RegisterForm";
 import UserProfile from "./components/UserProfile";
 import { useAuth } from "./components/AuthContext";
 import AddAddressForm from "./components/AddAddressForm";
+import ApiTest from "./components/ApiTest";
+import PaymentPage from "./components/PaymentPage";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./App.css";
 
@@ -47,16 +49,10 @@ function AuthRoutes() {
   return (
     <Routes>
       <Route path="/login" element={
-        <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <LoginForm onLogin={handleLogin} />
-          <p>Don't have an account? <button onClick={() => navigate('/register')}>Register</button></p>
-        </Box>
+        <LoginForm onLogin={handleLogin} />
       } />
       <Route path="/register" element={
-        <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <RegisterForm onRegister={() => navigate('/login')} />
-          <p>Already have an account? <button onClick={() => navigate('/login')}>Login</button></p>
-        </Box>
+        <RegisterForm onRegister={() => navigate('/login')} />
       } />
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
@@ -67,12 +63,19 @@ function MainApp() {
   const { cart } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
 
+  useEffect(() => {
+    const onItemAdded = () => setCartOpen(true);
+    window.addEventListener('cart:itemAdded', onItemAdded);
+    return () => window.removeEventListener('cart:itemAdded', onItemAdded);
+  }, []);
+
   return (
     <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh' }}>
       <Header onCartClick={() => setCartOpen(true)} />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/profile" element={<UserProfile />} />
+        <Route path="/payment" element={<PaymentPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />

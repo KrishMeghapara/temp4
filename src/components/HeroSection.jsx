@@ -208,18 +208,43 @@ export default function HeroSection() {
                 Fresh, quality products at unbeatable prices with zero delivery charges.
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: { xs: 'center', md: 'flex-start' } }}>
-                <AnimatedButton 
-                  size="large"
-                  endIcon={<ArrowForwardIcon />}
-                >
-                  Shop Now
-                </AnimatedButton>
+            
+                <AnimatedButton
+  size="large"
+  endIcon={<ArrowForwardIcon />}
+  sx={{
+    px: 4,
+    py: 1.5,
+    borderRadius: "50px",
+    fontWeight: "600",
+    fontSize: "1rem",
+    textTransform: "uppercase",
+    color: "#ffffff",
+    background: "rgba(50, 100, 255, 0.15)", // purple-tinted glass
+    border: "2px solid rgba(0, 153, 255, 0.3)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    boxShadow: "0 4px 20px rgba(0, 114, 255, 0.2)",
+    transition: "all 0.3s ease",
+    "&:hover": {
+      background: "rgba(50, 100, 255, 0.25)", // slightly more visible purple
+      borderColor: "rgba(0, 153, 255, 0.6)",
+      transform: "scale(1.05)",
+    },
+    display: "flex",
+    alignItems: "center",
+    gap: 1.2,
+  }}
+>
+  Shop Now
+</AnimatedButton>
+
                 <Button 
                   variant="outlined" 
                   size="large"
                   sx={{ 
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    color: 'white',
+                    borderColor: 'rgba(0, 0, 0, 0.5)',
+                    color: 'rgba(0, 0, 0, 1)',
                     fontWeight: 600,
                     borderRadius: '50px',
                     px: 3,

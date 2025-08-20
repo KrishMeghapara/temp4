@@ -11,7 +11,15 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('userData');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.error('Error reading user data from localStorage:', error);
+      return null;
+    }
+  });
   const [token, setToken] = useState(() => {
     try {
       return localStorage.getItem('jwtToken');
@@ -65,11 +73,35 @@ export const AuthProvider = ({ children }) => {
           if (!isValid) {
             // Token is invalid, clear it
             localStorage.removeItem('jwtToken');
+            localStorage.removeItem('userData');
             setToken(null);
             setUser(null);
           } else {
-            // Token is valid, you might want to fetch user data here
-            // For now, we'll just keep the existing user state
+            // Token is valid, fetch user data if not already loaded
+            if (!user) {
+              try {
+                const response = await fetch('http://localhost:5236/api/User/Profile', {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+                
+                if (response.ok) {
+                  const userData = await response.json();
+                  const userInfo = {
+                    ...userData,
+                    isGoogleUser: userData.IsGoogleUser || false,
+                    googlePicture: userData.GooglePicture || null
+                  };
+                  setUser(userInfo);
+                  localStorage.setItem('userData', JSON.stringify(userInfo));
+                }
+              } catch (error) {
+                console.error('Error fetching user profile:', error);
+              }
+            }
           }
         }
       } catch (error) {
@@ -77,6 +109,7 @@ export const AuthProvider = ({ children }) => {
         setError('Failed to initialize authentication');
         // Clear invalid token
         localStorage.removeItem('jwtToken');
+        localStorage.removeItem('userData');
         setToken(null);
         setUser(null);
       } finally {
@@ -85,7 +118,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-  }, [token, validateToken]);
+  }, [token, validateToken, user]);
 
   // Persist token to localStorage
   useEffect(() => {
@@ -108,9 +141,19 @@ export const AuthProvider = ({ children }) => {
     }
     
     try {
+      const userInfo = {
+        ...userData,
+        // Handle Google user data
+        isGoogleUser: userData.IsGoogleUser || false,
+        googlePicture: userData.GooglePicture || null
+      };
+      
       setToken(jwtToken);
-      setUser(userData);
+      setUser(userInfo);
       setError(null);
+      
+      // Save user data to localStorage
+      localStorage.setItem('userData', JSON.stringify(userInfo));
       
       // Optional: Set up token refresh timer
       const payload = JSON.parse(atob(jwtToken.split('.')[1]));
@@ -139,6 +182,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setError(null);
       localStorage.removeItem('jwtToken');
+      localStorage.removeItem('userData');
       
       // Optional: Notify server about logout
       if (token) {
@@ -165,16 +209,18 @@ export const AuthProvider = ({ children }) => {
     }
     
     try {
-      setUser(prevUser => ({
-        ...prevUser,
+      const updatedUser = {
+        ...user,
         ...userData
-      }));
+      };
+      setUser(updatedUser);
+      localStorage.setItem('userData', JSON.stringify(updatedUser));
       setError(null);
     } catch (error) {
       console.error('Update user error:', error);
       setError('Failed to update user data');
     }
-  }, []);
+  }, [user]);
 
   const refreshToken = useCallback(async () => {
     if (!token) return false;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
   Drawer, 
   Box, 
@@ -19,11 +19,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import PaymentIcon from '@mui/icons-material/Payment';
 import { useCart } from "./CartContext";
+import { useNavigate } from 'react-router-dom';
 import "./CartDrawer.css";
 
 export default function CartDrawer({ open, onClose }) {
-  const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const total = cart.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
+  const { cart, removeFromCart, updateQuantity, clearCart, loading, error } = useCart();
+  const navigate = useNavigate();
+  const total = cart.reduce((sum, item) => sum + (item.product?.productPrice || 0) * item.quantity, 0);
 
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
@@ -65,7 +67,24 @@ export default function CartDrawer({ open, onClose }) {
         </Box>
         <Divider sx={{ mb: 2 }} />
         <List sx={{ flexGrow: 1, overflow: 'auto' }}>
-          {cart.length === 0 ? (
+          {loading ? (
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 6,
+              color: '#6b7280'
+            }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>Loading cart...</Typography>
+            </Box>
+          ) : error ? (
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 6,
+              color: '#ef4444'
+            }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>Error loading cart</Typography>
+              <Typography variant="body2">{error}</Typography>
+            </Box>
+          ) : cart.length === 0 ? (
             <Box sx={{ 
               textAlign: 'center', 
               py: 6,
@@ -77,7 +96,7 @@ export default function CartDrawer({ open, onClose }) {
             </Box>
           ) : cart.map(item => (
             <ListItem 
-              key={item.productID} 
+              key={item.cartID} 
               alignItems="flex-start"
               sx={{ 
                 mb: 2,
@@ -96,12 +115,12 @@ export default function CartDrawer({ open, onClose }) {
                   height: 48
                 }}
               >
-                {item.productName.charAt(0)}
+                {item.product?.productName?.charAt(0) || 'P'}
               </Avatar>
               <ListItemText
                 primary={<>
                   <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1f2937' }}>
-                    {item.productName}
+                    {item.product?.productName || 'Product'}
                   </Typography>
                   <Chip 
                     label={`x${item.quantity}`} 
@@ -118,10 +137,10 @@ export default function CartDrawer({ open, onClose }) {
                 secondary={
                   <>
                     <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600 }}>
-                      ₹{item.productPrice} each
+                      ₹{item.product?.productPrice || 0} each
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {item.categoryName}
+                      {item.product?.category?.categoryName || 'Category'}
                     </Typography>
                   </>
                 }
@@ -138,7 +157,7 @@ export default function CartDrawer({ open, onClose }) {
                       fontWeight: 600
                     } 
                   }}
-                  onChange={e => updateQuantity(item.productID, Math.max(1, Number(e.target.value)))}
+                  onChange={e => updateQuantity(item.cartID, Math.max(1, Number(e.target.value)))}
                   sx={{ 
                     mr: 1,
                     '& .MuiInput-input': {
@@ -150,7 +169,7 @@ export default function CartDrawer({ open, onClose }) {
                 />
                 <IconButton 
                   edge="end" 
-                  onClick={() => removeFromCart(item.productID)}
+                  onClick={() => removeFromCart(item.cartID)}
                   sx={{ 
                     color: '#ef4444',
                     '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)' }
@@ -182,6 +201,10 @@ export default function CartDrawer({ open, onClose }) {
           fullWidth 
           disabled={cart.length === 0} 
           startIcon={<PaymentIcon />}
+          onClick={() => {
+            onClose();
+            navigate('/payment');
+          }}
           sx={{ 
             mb: 2,
             py: 1.5,
@@ -197,7 +220,7 @@ export default function CartDrawer({ open, onClose }) {
             }
           }}
         >
-          Checkout
+          Proceed to Payment
         </Button>
         <Button 
           variant="outlined" 

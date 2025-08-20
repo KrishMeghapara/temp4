@@ -14,7 +14,7 @@ export default function ProductCarousel({ products, categoryName, onAddToCart, o
     const { current } = scrollRef;
     if (!current) return;
     const cardWidth = current.querySelector('.product-card')?.offsetWidth || 220;
-    const scrollAmount = cardWidth * 2.5; // scroll by ~2.5 cards
+    const scrollAmount = cardWidth * 2.5; 
     if (direction === 'left') {
       current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
     } else {
@@ -94,6 +94,7 @@ export default function ProductCarousel({ products, categoryName, onAddToCart, o
         </div>
         <button className="carousel-arrow right" onClick={() => scroll('right')}><ArrowForwardIosIcon /></button>
       </div>
+
     </div>
   );
 } 
